@@ -20,23 +20,43 @@ type Env = [(Name, Type)]
 
 -- Implementar
 checkProgram :: Program -> [Error]
-checkProgram (Program MB) = case checkNombres MB [] of
-               [] -> checkTipos t []
+checkProgram (Program mb) = checkNombres mb []
 
 checkNombres :: MainBody -> [Name] -> [Error]
 checkNombres [] acc = []
-checkNombres (Decl VarDef _ m:ms) acc = if (member m acc) then Duplicated m:checkNombres ms acc
-                           else checkNombres ms (m:acc)
-checkNombres (Com If ex b1 b2:ms) acc = checkExprNombres ex acc ++ checkBody b1 acc ++ checkBody b2 acc ++ checkNombres ms acc
-checkNombres (Com While ex b1:ms) acc = checkExprNombres ex acc ++ checkBody b1 acc ++ checkNombres ms acc
-checkNombres (Com PutChar ex:ms) acc = checkExprNombres ex acc ++ checkNombres ms acc
+checkNombres (Decl vd:xs) acc = if (checkVarDef vd acc) then (Duplicated m:checkNombres xs acc) 
+                                 else checkNombres xs (m:acc)
+                                 where m = obtenerVar vd
+checkNombres (Com (If ex b1 b2):ms) acc = checkExprNombres ex acc ++ checkBody b1 acc ++ checkBody b2 acc ++ checkNombres ms acc
+checkNombres (Com (While ex b1):ms) acc = checkExprNombres ex acc ++ checkBody b1 acc ++ checkNombres ms acc
+checkNombres (Com (PutChar ex):ms) acc = checkExprNombres ex acc ++ checkNombres ms acc
+checkNombres (Com (StmtExpr ex):ms) acc = checkExprNombres ex acc ++ checkNombres ms acc
 
-member :: Name -> [Name] -> Boolean
-member m acc = (/=[]).filter(==m) acc
+obtenerVar :: VarDef -> Name
+obtenerVar (VarDef _ m) = m
+
+member :: Name -> [Name] -> Bool
+member m acc = (/=[])$filter(==m) acc
 
 checkExprNombres :: Expr -> [Name] -> [Error]
-checkExprNombres = Undefined
+checkExprNombres (Var c) acc | not (member c acc) = [Undefined c]
+                             | otherwise = []
+checkExprNombres (Unary _ c) acc = checkExprNombres c acc
+checkExprNombres (Binary _ c e) acc = checkExprNombres c acc ++ checkExprNombres e acc
+checkExprNombres (Assign n e) acc | member n acc = checkExprNombres e acc
+                                  | otherwise = Undefined n : checkExprNombres e acc
+checkExprNombres _ acc = []
+
+checkVarDef :: VarDef -> [Name] -> Bool
+checkVarDef (VarDef _ m) acc = member m acc
 
 checkBody :: Body -> [Name] -> [Error]
-checkBody = Undefined
+checkBody [] acc =  []
+checkBody (If e b1 b2:xs) acc = checkExprNombres e acc ++ checkBody b1 acc ++ checkBody b2 acc ++ checkBody xs acc
+checkBody (While e b:xs) acc = checkExprNombres e acc ++ checkBody b acc ++ checkBody xs acc
+checkBody (StmtExpr e:xs) acc = checkExprNombres e acc ++ checkBody xs acc
+checkBody (PutChar e:xs) acc = checkExprNombres e acc ++ checkBody xs acc
 
+desparseo :: Either String Program -> [Error]
+desparseo (Left _) = []
+desparseo (Right p) = checkProgram p
