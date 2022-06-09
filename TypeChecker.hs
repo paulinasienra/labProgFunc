@@ -94,9 +94,9 @@ obtenerVarTipo (VarDef t n) = (n,t)
 
 checkBodyTipos :: Body -> Env -> [Error]
 checkBodyTipos [] _ = []
-checkBodyTipos (If e b1 b2:xs) acc = checkExprTipos e acc ++ checkBodyTipos b1 acc ++ checkBodyTipos b2 acc ++ checkBodyTipos xs acc
-checkBodyTipos (While e b:xs) acc = checkExprTipos e acc ++ checkBodyTipos b acc ++ checkBodyTipos xs acc
-checkBodyTipos (StmtExpr e:xs) acc = checkExprTipos e acc ++ checkBodyTipos xs acc
+checkBodyTipos (If e b1 b2:xs) acc = snd (checkExprTipos e acc) ++ checkBodyTipos b1 acc ++ checkBodyTipos b2 acc ++ checkBodyTipos xs acc
+checkBodyTipos (While e b:xs) acc = snd (checkExprTipos e acc) ++ checkBodyTipos b acc ++ checkBodyTipos xs acc
+checkBodyTipos (StmtExpr e:xs) acc = snd (checkExprTipos e acc) ++ checkBodyTipos xs acc
 checkBodyTipos (PutChar e:xs) acc | tip == TyInt  = Expected TyChar TyInt:checkBodyTipos xs acc
                                   | otherwise = checkBodyTipos xs acc
                                   where tip = fst (checkExprTipos e acc)
@@ -109,69 +109,24 @@ checkExprTipos (Var nom) acc = (buscarTipo nom acc,[])
 checkExprTipos (NatLit _) acc = (TyInt,[])
 
 checkExprTipos (Binary Equ e1 e2) acc | fst (checkExprTipos e1 acc) == fst (checkExprTipos e1 acc) = (fst(checkExprTipos e1 acc),[])
-                                      | otherwise = ((checkExprTipos e1 acc),[Expected fst (checkExprTipos e1 acc) fst (checkExprTipos e2 acc)])
+                                      | otherwise = (fst (checkExprTipos e1 acc),[Expected (fst (checkExprTipos e1 acc)) (fst (checkExprTipos e2 acc))])
 
 checkExprTipos (Binary Less e1 e2) acc | fst (checkExprTipos e1 acc) == fst (checkExprTipos e1 acc) = (fst(checkExprTipos e1 acc),[])
-                                       | otherwise = (fst (checkExprTipos e1 acc),[Expected fst (checkExprTipos e1 acc) fst (checkExprTipos e2 acc)])
+                                       | otherwise = (fst (checkExprTipos e1 acc),[Expected (fst (checkExprTipos e1 acc)) (fst (checkExprTipos e2 acc))])
 
 checkExprTipos (Binary _ e1 e2) acc | (fst (checkExprTipos e1 acc) == TyInt) && (fst (checkExprTipos e1 acc) == TyInt) = (TyInt,[])
-                                    | (fst (checkExprTipos e1 acc) == TyChar) && (fst (checkExprTipos e1 acc) == TyChar) = (TyInt,Expected TyInt TyChar:Expected TyInt TyChar:[])
+                                    | (fst (checkExprTipos e1 acc) == TyChar) && (fst (checkExprTipos e1 acc) == TyChar) = (TyInt,Expected TyInt TyChar:[Expected TyInt TyChar])
                                     | otherwise = (TyInt,[Expected TyInt TyChar])
 
 checkExprTipos (Unary _ e) acc | fst(checkExprTipos e acc) == TyChar = (TyInt,[Expected TyInt TyChar])
-                               | otherwise = [TyInt,[]]
+                               | otherwise = (TyInt,[])
 
 checkExprTipos (Assign n e) acc | buscarTipo n acc == fst (checkExprTipos e acc) = (buscarTipo n acc,[])
-                                | otherwise                                        = (buscarTipo n acc,[Expected buscarTipo n acc fst (checkExprTipos e acc)])
+                                | otherwise                                        = (buscarTipo n acc,[Expected (buscarTipo n acc) (fst (checkExprTipos e acc))])
 checkExprTipos _ _ = (TyChar,[])
 
 
 buscarTipo :: Name -> Env -> Type
-buscarTipo nom (x:xs) | nom == fst x = second x
+buscarTipo nom (x:xs) | nom == fst x = snd x
                       | otherwise =  buscarTipo nom xs
 buscarTipo _ [] = TyInt -- Esto es necesario?
-
-
-
-
-
-
-
-
-
-
-
-
-
-
---NO SE USA
-isChar :: Expr -> Env -> Bool
-isChar (Var nom) acc = (buscarTipo nom acc) == TyChar
-isChar (Binary Equ e1 e2) acc = isChar e1 acc && isChar e2 acc
-isChar (Binary Less e1 e2) acc = isChar e1 acc && isChar e2 acc
-isChar (Binary _ e1 e2) acc = False
-
-
-
-tiposIguales e1 e2 = (not (isChar e1) && not (isChar e2)) || (isChar e1 && isChar e2)
-
-obtenerTipoExpr :: Expr -> Env -> Either Error Type
-obtenerTipoExpr (Var nom) acc = Right buscarTipo nom acc
-
-
-obtenerTipoExpr (Unary _ e) acc = obtenerTipoExpr e acc -- Esto esta mal
-obtenerTipoExpr bin acc = obtenerTipoBinary bin acc -- Esto esta mal
-obtenerTipoExpr (Assign n e) acc = buscarTipo n acc -- Esto tambien
-obtenerTipoExpr (NatLit _) _ = Right TyInt
-obtenerTipoExpr _ _ = Right TyChar
-
-
---
---x && y && z && t && e
-
-obtenerTipoBinary :: Binary -> Env -> Either Error Type
-obtenerTipoBinary Plus e1 e2 acc | t1 && t2  = Left Expected t1 t2
-                                 | otherwise = Right TyInt
-                                 where 
-                                    t1 = (obtenerTipoExpr e1 = Right TyInt)
-                                    t2 = (obtenerTipoExpr e2 = Right TyInt)
