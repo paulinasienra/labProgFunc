@@ -20,7 +20,9 @@ type Env = [(Name, Type)]
 
 -- Implementar
 checkProgram :: Program -> [Error]
-checkProgram (Program mb) = checkNombres mb []
+checkProgram (Program mb) = case checkNombres mb [] of
+                     [] -> checkTipos mb []
+                     err -> err
 
 checkNombres :: MainBody -> [Name] -> [Error]
 checkNombres [] acc = []
@@ -63,3 +65,8 @@ desparseo (Right p) = checkProgram p
 
 parseoCheck :: String -> [Error]
 parseoCheck s = desparseo $ parser s
+
+
+--SEGUNDO CHECKEO
+checkTipos :: MainBody -> Env -> [Error]
+checkTipos = undefined
