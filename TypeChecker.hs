@@ -81,22 +81,24 @@ parseoCheck s = desparseo $ parser s
 checkTipos :: MainBody -> Env -> [Error]
 checkTipos [] acc = []
 checkTipos (Decl vd:xs) acc = checkTipos xs (obtenerVarTipo vd:acc)
-checkTipos (Com stat:xs) acc = checkStmt stat acc ++ checkTipos xs acc
+checkTipos (Com stat:xs) acc = checkBodyTipos [stat] acc ++ checkTipos xs acc
 -- Body = [Stmt]
 -- Env = [(Name,Type)]
 
 obtenerVarTipo :: VarDef -> (Name,Type)
 obtenerVarTipo (VarDef t n) = (n,t)
 
-checkStmt :: Stmt -> Env -> [Error]
-checkStmt st = checkBodyTipos [st]
+
+--checkStmt :: Stmt -> Env -> [Error]
+--checkStmt st = checkBodyTipos [st]
 
 checkBodyTipos :: Body -> Env -> [Error]
-checkBodyTipos [] acc = []
+checkBodyTipos [] _ = []
 checkBodyTipos (If e b1 b2:xs) acc = checkExprTipos e acc ++ checkBodyTipos b1 acc ++ checkBodyTipos b2 acc ++ checkBodyTipos xs acc
 checkBodyTipos (While e b:xs) acc = checkExprTipos e acc ++ checkBodyTipos b acc ++ checkBodyTipos xs acc
 checkBodyTipos (StmtExpr e:xs) acc = checkExprTipos e acc ++ checkBodyTipos xs acc
-checkBodyTipos (PutChar e:xs) acc | tip /= TyChar = Expected tip TyChar:checkBodyTipos xs acc
+checkBodyTipos (PutChar e:xs) acc | isLeft tip = if fromLeft tip == TyInt Expected tip TyChar:checkBodyTipos xs acc
+                                                else checkBodyTipos xs acc
                                   | otherwise = checkBodyTipos xs acc
                                   where tip = obtenerTipoExpr e acc
 
@@ -111,8 +113,11 @@ checkExprTipos (Assign n e) acc | t1 /= t2 = [Expected t1 t2]
                                     where
                                        t1 = buscarTipo n acc
                                        t2 = obtenerTipoExpr e acc
-checkExprTipos _ _ = [] -- Las otras expresiones pueden dar error de tipo?
+checkExprTipos _ _ = [] -- Las otras expresiones pueden dar error de tipo? si
 
+obtenerRight :: Either a b -> b
+obtenerRight (Right x) = x
+obtenerRight (Left
 
 first :: (a, b) -> a
 first (x,_) = x
@@ -127,10 +132,23 @@ buscarTipo nom (x:xs) | nom == first x = second x
 buscarTipo _ [] = TyInt -- Esto es necesario?
 
 
-obtenerTipoExpr :: Expr -> Env -> Type
-obtenerTipoExpr (Var nom) acc = buscarTipo nom acc
-obtenerTipoExpr (Unary _ e) acc = obtenerTipoExpr e acc
-obtenerTipoExpr (Binary _ e1 e2) acc = obtenerTipoExpr e1 acc -- Esto esta mal
-obtenerTipoExpr (Assign n e) acc = buscarTipo n acc           -- Esto tambien
-obtenerTipoExpr (NatLit _) _ = TyInt
-obtenerTipoExpr _ _ = TyChar 
+obtenerTipoExpr :: Expr -> Env -> Either Error Type
+obtenerTipoExpr (Var nom) acc = Right buscarTipo nom acc
+
+
+obtenerTipoExpr (Unary _ e) acc = obtenerTipoExpr e acc -- Esto esta mal
+obtenerTipoExpr bin acc = obtenerTipoBinary bin acc -- Esto esta mal
+obtenerTipoExpr (Assign n e) acc = buscarTipo n acc -- Esto tambien
+obtenerTipoExpr (NatLit _) _ = Right TyInt
+obtenerTipoExpr _ _ = Right TyChar
+
+
+--
+--x && y && z && t && e
+
+obtenerTipoBinary :: Binary -> Env -> Either Error Type
+obtenerTipoBinary Plus e1 e2 acc | t1 && t2  = Left Expected t1 t2
+                                 | otherwise = Right TyInt
+                                 where 
+                                    t1 = (obtenerTipoExpr e1 = Right TyInt)
+                                    t2 = (obtenerTipoExpr e2 = Right TyInt)
