@@ -109,7 +109,7 @@ checkExprTipos (Var nom) acc = (buscarTipo nom acc,[])
 checkExprTipos (NatLit _) acc = (TyInt,[])
 
 checkExprTipos (Binary Equ e1 e2) acc | fst (checkExprTipos e1 acc) == fst (checkExprTipos e2 acc) = (fst(checkExprTipos e1 acc), snd (checkExprTipos e1 acc) ++ snd (checkExprTipos e2 acc))
-                                      | otherwise = (fst (checkExprTipos e1 acc),Expected (fst (checkExprTipos e2 acc)) (fst (checkExprTipos e2 acc)):snd (checkExprTipos e1 acc) ++ snd (checkExprTipos e2 acc))
+                                      | otherwise = (fst (checkExprTipos e1 acc),Expected (fst (checkExprTipos e1 acc)) (fst (checkExprTipos e2 acc)):snd (checkExprTipos e1 acc) ++ snd (checkExprTipos e2 acc))
 
 checkExprTipos (Binary Less e1 e2) acc | fst (checkExprTipos e1 acc) == fst (checkExprTipos e2 acc) = (fst(checkExprTipos e1 acc),snd (checkExprTipos e1 acc) ++ snd (checkExprTipos e2 acc))
                                        | otherwise = (fst (checkExprTipos e1 acc),Expected (fst (checkExprTipos e1 acc)) (fst (checkExprTipos e2 acc)):snd (checkExprTipos e1 acc) ++ snd (checkExprTipos e2 acc))
