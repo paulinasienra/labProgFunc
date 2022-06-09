@@ -108,21 +108,21 @@ checkExprTipos (Var nom) acc = (buscarTipo nom acc,[])
 
 checkExprTipos (NatLit _) acc = (TyInt,[])
 
-checkExprTipos (Binary Equ e1 e2) acc | fst (checkExprTipos e1 acc) == fst (checkExprTipos e1 acc) = (fst(checkExprTipos e1 acc),[])
-                                      | otherwise = (fst (checkExprTipos e1 acc),[Expected (fst (checkExprTipos e1 acc)) (fst (checkExprTipos e2 acc))])
+checkExprTipos (Binary Equ e1 e2) acc | fst (checkExprTipos e1 acc) == fst (checkExprTipos e2 acc) = (fst(checkExprTipos e1 acc), snd (checkExprTipos e1 acc) ++ snd (checkExprTipos e2 acc))
+                                      | otherwise = (fst (checkExprTipos e1 acc),Expected (fst (checkExprTipos e2 acc)) (fst (checkExprTipos e2 acc)):snd (checkExprTipos e1 acc) ++ snd (checkExprTipos e2 acc))
 
-checkExprTipos (Binary Less e1 e2) acc | fst (checkExprTipos e1 acc) == fst (checkExprTipos e1 acc) = (fst(checkExprTipos e1 acc),[])
-                                       | otherwise = (fst (checkExprTipos e1 acc),[Expected (fst (checkExprTipos e1 acc)) (fst (checkExprTipos e2 acc))])
+checkExprTipos (Binary Less e1 e2) acc | fst (checkExprTipos e1 acc) == fst (checkExprTipos e2 acc) = (fst(checkExprTipos e1 acc),snd (checkExprTipos e1 acc) ++ snd (checkExprTipos e2 acc))
+                                       | otherwise = (fst (checkExprTipos e1 acc),Expected (fst (checkExprTipos e1 acc)) (fst (checkExprTipos e2 acc)):snd (checkExprTipos e1 acc) ++ snd (checkExprTipos e2 acc))
 
-checkExprTipos (Binary _ e1 e2) acc | (fst (checkExprTipos e1 acc) == TyInt) && (fst (checkExprTipos e1 acc) == TyInt) = (TyInt,[])
-                                    | (fst (checkExprTipos e1 acc) == TyChar) && (fst (checkExprTipos e1 acc) == TyChar) = (TyInt,Expected TyInt TyChar:[Expected TyInt TyChar])
-                                    | otherwise = (TyInt,[Expected TyInt TyChar])
+checkExprTipos (Binary _ e1 e2) acc | (fst (checkExprTipos e1 acc) == TyInt) && (fst (checkExprTipos e2 acc) == TyInt) = (TyInt,snd (checkExprTipos e1 acc) ++ snd (checkExprTipos e2 acc))
+                                    | (fst (checkExprTipos e1 acc) == TyChar) && (fst (checkExprTipos e2 acc) == TyChar) = (TyInt,Expected TyInt TyChar:Expected TyInt TyChar:snd (checkExprTipos e1 acc) ++ snd (checkExprTipos e2 acc))
+                                    | otherwise = (TyInt,Expected TyInt TyChar:snd (checkExprTipos e1 acc) ++ snd (checkExprTipos e2 acc))
 
-checkExprTipos (Unary _ e) acc | fst(checkExprTipos e acc) == TyChar = (TyInt,[Expected TyInt TyChar])
-                               | otherwise = (TyInt,[])
+checkExprTipos (Unary _ e) acc | fst(checkExprTipos e acc) == TyChar = (TyInt,Expected TyInt TyChar:snd (checkExprTipos e acc))
+                               | otherwise = (TyInt,snd (checkExprTipos e acc))
 
-checkExprTipos (Assign n e) acc | buscarTipo n acc == fst (checkExprTipos e acc) = (buscarTipo n acc,[])
-                                | otherwise                                        = (buscarTipo n acc,[Expected (buscarTipo n acc) (fst (checkExprTipos e acc))])
+checkExprTipos (Assign n e) acc | buscarTipo n acc == fst (checkExprTipos e acc) = (buscarTipo n acc, snd (checkExprTipos e acc))
+                                | otherwise                                        = (buscarTipo n acc,Expected (buscarTipo n acc) (fst (checkExprTipos e acc)):snd (checkExprTipos e acc))
 checkExprTipos _ _ = (TyChar,[])
 
 
