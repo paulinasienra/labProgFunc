@@ -97,8 +97,8 @@ checkBodyTipos [] _ = []
 checkBodyTipos (If e b1 b2:xs) acc = snd (checkExprTipos e acc) ++ checkBodyTipos b1 acc ++ checkBodyTipos b2 acc ++ checkBodyTipos xs acc
 checkBodyTipos (While e b:xs) acc = snd (checkExprTipos e acc) ++ checkBodyTipos b acc ++ checkBodyTipos xs acc
 checkBodyTipos (StmtExpr e:xs) acc = snd (checkExprTipos e acc) ++ checkBodyTipos xs acc
-checkBodyTipos (PutChar e:xs) acc | tip == TyInt  = Expected TyChar TyInt:checkBodyTipos xs acc
-                                  | otherwise = checkBodyTipos xs acc
+checkBodyTipos (PutChar e:xs) acc | tip == TyInt  = Expected TyChar TyInt:snd (checkExprTipos e acc) ++ checkBodyTipos xs acc
+                                  | otherwise = snd (checkExprTipos e acc) ++ checkBodyTipos xs acc
                                   where tip = fst (checkExprTipos e acc)
                                   -- Agregar snd a los checkExprTipos y ponerlo aca
 
