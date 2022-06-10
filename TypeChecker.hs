@@ -22,7 +22,7 @@ type Env = [(Name, Type)]
 -- Implementar
 checkProgram :: Program -> [Error]
 checkProgram (Program mb) = case checkNombres mb [] of
-                     [] -> checkTipos mb []
+                     [] -> reverse (checkTipos mb [])
                      err -> err
 
 checkNombres :: MainBody -> [Name] -> [Error]
@@ -94,12 +94,20 @@ obtenerVarTipo (VarDef t n) = (n,t)
 
 checkBodyTipos :: Body -> Env -> [Error]
 checkBodyTipos [] _ = []
-checkBodyTipos (If e b1 b2:xs) acc = snd (checkExprTipos e acc) ++ checkBodyTipos b1 acc ++ checkBodyTipos b2 acc ++ checkBodyTipos xs acc
-checkBodyTipos (While e b:xs) acc = snd (checkExprTipos e acc) ++ checkBodyTipos b acc ++ checkBodyTipos xs acc
+checkBodyTipos (If e b1 b2:xs) acc | fst tip == TyChar = [Expected TyInt TyChar] ++ snd tip ++ checkBodyTipos b1 acc ++ checkBodyTipos b2 acc ++ checkBodyTipos xs acc
+                                   | otherwise = snd tip ++ checkBodyTipos b1 acc ++ checkBodyTipos b2 acc ++ checkBodyTipos xs acc
+                                 where
+                                    tip = checkExprTipos e acc
+--   snd (checkExprTipos e acc) ++ checkBodyTipos b1 acc ++ checkBodyTipos b2 acc ++ checkBodyTipos xs acc
+checkBodyTipos (While e b:xs) acc | fst tip == TyChar = [Expected TyInt TyChar] ++ snd tip ++ checkBodyTipos b acc++ checkBodyTipos xs acc
+                                   | otherwise = snd tip ++ checkBodyTipos b acc++ checkBodyTipos xs acc
+                                 where
+                                    tip = checkExprTipos e acc
 checkBodyTipos (StmtExpr e:xs) acc = snd (checkExprTipos e acc) ++ checkBodyTipos xs acc
-checkBodyTipos (PutChar e:xs) acc | tip == TyInt  = Expected TyChar TyInt:snd (checkExprTipos e acc) ++ checkBodyTipos xs acc
-                                  | otherwise = snd (checkExprTipos e acc) ++ checkBodyTipos xs acc
-                                  where tip = fst (checkExprTipos e acc)
+checkBodyTipos (PutChar e:xs) acc | fst tip == TyInt  = Expected TyChar TyInt:snd tip ++ checkBodyTipos xs acc
+                                  | otherwise = snd tip ++ checkBodyTipos xs acc
+                                  where 
+                                     tip = checkExprTipos e acc
                                   -- Agregar snd a los checkExprTipos y ponerlo aca
 
 
@@ -108,21 +116,34 @@ checkExprTipos (Var nom) acc = (buscarTipo nom acc,[])
 
 checkExprTipos (NatLit _) acc = (TyInt,[])
 
-checkExprTipos (Binary Equ e1 e2) acc | fst (checkExprTipos e1 acc) == fst (checkExprTipos e2 acc) = (fst(checkExprTipos e1 acc), snd (checkExprTipos e1 acc) ++ snd (checkExprTipos e2 acc))
-                                      | otherwise = (fst (checkExprTipos e1 acc),Expected (fst (checkExprTipos e1 acc)) (fst (checkExprTipos e2 acc)):snd (checkExprTipos e1 acc) ++ snd (checkExprTipos e2 acc))
+checkExprTipos (Binary Equ e1 e2) acc | fst t1 == fst t2 = (fst t1, snd t1 ++ snd t2)
+                                      | otherwise = (fst t1,Expected (fst t1) (fst t2):snd t1 ++ snd t2)
+                                      where 
+                                         t1 = checkExprTipos e1 acc
+                                         t2 = checkExprTipos e2 acc
 
-checkExprTipos (Binary Less e1 e2) acc | fst (checkExprTipos e1 acc) == fst (checkExprTipos e2 acc) = (fst(checkExprTipos e1 acc),snd (checkExprTipos e1 acc) ++ snd (checkExprTipos e2 acc))
-                                       | otherwise = (fst (checkExprTipos e1 acc),Expected (fst (checkExprTipos e1 acc)) (fst (checkExprTipos e2 acc)):snd (checkExprTipos e1 acc) ++ snd (checkExprTipos e2 acc))
+checkExprTipos (Binary Less e1 e2) acc | fst t1 == fst t2 = (fst t1,snd t1 ++ snd t2)
+                                       | otherwise = (fst t1,Expected (fst t1) (fst t2):snd t1 ++ snd t2)
+                                       where
+                                          t1 = checkExprTipos e1 acc
+                                          t2 = checkExprTipos e2 acc
 
-checkExprTipos (Binary _ e1 e2) acc | (fst (checkExprTipos e1 acc) == TyInt) && (fst (checkExprTipos e2 acc) == TyInt) = (TyInt,snd (checkExprTipos e1 acc) ++ snd (checkExprTipos e2 acc))
-                                    | (fst (checkExprTipos e1 acc) == TyChar) && (fst (checkExprTipos e2 acc) == TyChar) = (TyInt,Expected TyInt TyChar:Expected TyInt TyChar:snd (checkExprTipos e1 acc) ++ snd (checkExprTipos e2 acc))
-                                    | otherwise = (TyInt,Expected TyInt TyChar:snd (checkExprTipos e1 acc) ++ snd (checkExprTipos e2 acc))
+checkExprTipos (Binary _ e1 e2) acc | (fst t1 == TyInt) && (fst t2 == TyInt) = (TyInt,snd t1 ++ snd t2)
+                                    | (fst t1 == TyChar) && (fst t2 == TyChar) = (TyInt,Expected TyInt TyChar:Expected TyInt TyChar:snd t1 ++ snd t2)
+                                    | otherwise = (TyInt,Expected TyInt TyChar:snd t1 ++ snd t2)
+                                    where
+                                       t1 = checkExprTipos e1 acc
+                                       t2 = checkExprTipos e2 acc
 
-checkExprTipos (Unary _ e) acc | fst(checkExprTipos e acc) == TyChar = (TyInt,Expected TyInt TyChar:snd (checkExprTipos e acc))
-                               | otherwise = (TyInt,snd (checkExprTipos e acc))
+checkExprTipos (Unary _ e) acc | fst tip == TyChar = (TyInt,Expected TyInt TyChar:snd tip)
+                               | otherwise = (TyInt,snd tip)
+                               where 
+                                  tip = checkExprTipos e acc
 
-checkExprTipos (Assign n e) acc | buscarTipo n acc == fst (checkExprTipos e acc) = (buscarTipo n acc, snd (checkExprTipos e acc))
-                                | otherwise                                        = (buscarTipo n acc,Expected (buscarTipo n acc) (fst (checkExprTipos e acc)):snd (checkExprTipos e acc))
+checkExprTipos (Assign n e) acc | buscarTipo n acc == fst tip = (buscarTipo n acc, snd tip)
+                                | otherwise                                      = (buscarTipo n acc,Expected (buscarTipo n acc) (fst tip):snd tip)
+                                where
+                                   tip = checkExprTipos e acc
 checkExprTipos _ _ = (TyChar,[])
 
 
