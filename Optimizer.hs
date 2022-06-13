@@ -9,7 +9,18 @@ import Syntax
 
 -- Implementar
 optimize :: Program -> Program
-optimize = undefined
+optimize (Program mb) = Program (optProg mb)
+
+optProg :: MainBody -> MainBody 
+optProg [] = []
+optProg (Decl vd:xs) = Decl vd : optProg xs
+optProg (Com stm:xs) | not$null (stmtOpt stm) = Com (head(stmtOpt stm)) : optProg xs
+                     | otherwise = optProg xs
+
+optParser :: Either String Program -> Program
+optParser (Left _) = Program []
+optParser (Right p) = optimize p
+
 
 -- COSAS PARA ARREGLAR
 -- Todos los úlimos casos recursivos quedan en loop si una de las sub-expresiones no se reduce a un NatLit
@@ -28,10 +39,9 @@ exprOpt GetChar = GetChar
 exprOpt (Var v) = Var v
 
 --OPERADORES LÓGICOS
-exprOpt (Binary Or (NatLit n) ex) | n /= 0 = NatLit n
-                                  | otherwise = exprOpt ex
-exprOpt (Binary Or ex (NatLit n)) | n /= 0 = NatLit n
-                                  | otherwise = exprOpt ex
+exprOpt (Binary Or (NatLit 0) ex) = exprOpt ex
+exprOpt (Binary Or ex (NatLit 0)) = exprOpt ex
+exprOpt (Binary Or (NatLit n) ex) = NatLit n
 exprOpt (Binary Or exp1 exp2) | snd (esNatLit e1) && fst (esNatLit e1) /= 0 = NatLit $fst (esNatLit e1)
                               | snd (esNatLit e1) && fst (esNatLit e1) == 0 = e2
                               | snd (esNatLit e2) && fst (esNatLit e2) /= 0 = NatLit $fst (esNatLit e2)
@@ -45,7 +55,6 @@ exprOpt (Binary Or exp1 exp2) | snd (esNatLit e1) && fst (esNatLit e1) /= 0 = Na
 exprOpt (Binary And (NatLit 0) ex) = NatLit 0
 exprOpt (Binary And ex (NatLit 0)) = NatLit 0
 exprOpt (Binary And (NatLit n) ex) = exprOpt ex
-exprOpt (Binary And ex (NatLit n)) = exprOpt ex
 exprOpt (Binary And exp1 exp2) | snd (esNatLit e1) && fst (esNatLit e1) /= 0 = e2
                                | snd (esNatLit e1) && fst (esNatLit e1) == 0 = NatLit 0
                                | snd (esNatLit e2) && fst (esNatLit e2) /= 0 = e1
