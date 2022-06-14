@@ -11,7 +11,7 @@ import Syntax
 optimize :: Program -> Program
 optimize (Program mb) = Program (optProg mb)
 
-optProg :: MainBody -> MainBody 
+optProg :: MainBody -> MainBody
 optProg [] = []
 optProg (Decl vd:xs) = Decl vd : optProg xs
 optProg (Com stm:xs) | not$null (stmtOpt stm) = Com (head(stmtOpt stm)) : optProg xs
@@ -35,7 +35,7 @@ optParser (Right p) = optimize p
 exprOpt :: Expr -> Expr
 exprOpt (NatLit i) = NatLit i
 exprOpt (CharLit c)  = CharLit c
-exprOpt GetChar = GetChar 
+exprOpt GetChar = GetChar
 exprOpt (Var v) = Var v
 
 --OPERADORES LÓGICOS
@@ -47,7 +47,7 @@ exprOpt (Binary Or exp1 exp2) | snd (esNatLit e1) && fst (esNatLit e1) /= 0 = Na
                               | snd (esNatLit e2) && fst (esNatLit e2) /= 0 = NatLit $fst (esNatLit e2)
                               | snd (esNatLit e2) && fst (esNatLit e2) == 0 = e1
                               | otherwise = Binary Or e1 e2
-                              where 
+                              where
                                 e1 = exprOpt exp1
                                 e2 = exprOpt exp2
 
@@ -60,7 +60,7 @@ exprOpt (Binary And exp1 exp2) | snd (esNatLit e1) && fst (esNatLit e1) /= 0 = e
                                | snd (esNatLit e2) && fst (esNatLit e2) /= 0 = e1
                                | snd (esNatLit e2) && fst (esNatLit e2) == 0 = NatLit 0
                                | otherwise = Binary And e1 e2
-                               where 
+                               where
                                  e1 = exprOpt exp1
                                  e2 = exprOpt exp2
 
@@ -76,22 +76,22 @@ exprOpt (Binary Plus (NatLit 0) ex) = exprOpt ex
 exprOpt (Binary Plus ex (NatLit 0)) = exprOpt ex
 exprOpt (Binary Plus (Unary Neg exp1) (Unary Neg exp2)) | snd (esNatLit e1) && snd (esNatLit e2) = exprOpt (Unary Neg (NatLit (fst (esNatLit e1) + fst (esNatLit e2))))-- (-2) + (-4) = -2 -4 = -6
                                                         | otherwise = Binary Plus (Unary Neg e1) (Unary Neg e2)
-                                                       where 
+                                                       where
                                                          e1 = exprOpt exp1
                                                          e2 = exprOpt exp2
 exprOpt (Binary Plus (Unary Neg exp1) exp2) | snd (esNatLit e1) && snd (esNatLit e2) = exprOpt (Binary Minus (NatLit (fst (esNatLit e2))) (NatLit (fst (esNatLit e1))))-- (-2) + 3 = 1
                                             | otherwise = Binary Plus (Unary Neg e1) e2
-                                           where 
+                                           where
                                              e1 = exprOpt exp1
                                              e2 = exprOpt exp2
 exprOpt (Binary Plus exp1 (Unary Neg exp2)) | snd (esNatLit e1) && snd (esNatLit e2) = exprOpt (Binary Minus (NatLit (fst (esNatLit e1))) (NatLit (fst (esNatLit e2))))-- 2 + (-5) = -3
                                             | otherwise = Binary Plus e1 (Unary Neg exp2)
-                                           where 
+                                           where
                                              e1 = exprOpt exp1
                                              e2 = exprOpt exp2
 exprOpt (Binary Plus exp1 exp2) | snd (esNatLit e1) && snd (esNatLit e2) = NatLit $ fst (esNatLit e1) + fst (esNatLit e2)
                                 | otherwise = Binary Plus e1 e2
-                               where 
+                               where
                                  e1 = exprOpt exp1
                                  e2 = exprOpt exp2
 
@@ -99,23 +99,23 @@ exprOpt (Binary Minus ex (NatLit 0)) = exprOpt ex
 exprOpt (Binary Minus (NatLit 0) ex) = Unary Neg (exprOpt ex)
 exprOpt (Binary Minus (Unary Neg exp1) (Unary Neg exp2)) | snd (esNatLit e1) && snd (esNatLit e2) = exprOpt (Binary Plus (Unary Neg exp1) (NatLit (fst (esNatLit e2))))-- (-x) - (-y) ==> (-x) + y
                                                          | otherwise = Binary Minus (Unary Neg e1) (Unary Neg e2)
-                                                        where 
+                                                        where
                                                           e1 = exprOpt exp1
                                                           e2 = exprOpt exp2
 exprOpt (Binary Minus (Unary Neg exp1) exp2) | snd (esNatLit e1) && snd (esNatLit e2) = exprOpt (Unary Neg (NatLit $abs(fst (esNatLit e2) + fst (esNatLit e1))))
                                              | otherwise = Binary Minus (Unary Neg e1) e2
-                                            where 
+                                            where
                                               e1 = exprOpt exp1
                                               e2 = exprOpt exp2
 exprOpt (Binary Minus exp1 (Unary Neg exp2)) | snd (esNatLit e1) && snd (esNatLit e2) = exprOpt(Binary Plus (NatLit (fst (esNatLit e1))) (NatLit (fst (esNatLit e2))))
                                              | otherwise = Binary Minus e1 (Unary Neg exp2)
-                                            where 
+                                            where
                                               e1 = exprOpt exp1
                                               e2 = exprOpt exp2
 exprOpt (Binary Minus exp1 exp2) | (snd (esNatLit e1) && snd (esNatLit e2)) && fst (esNatLit e1) < fst (esNatLit e2) = exprOpt (Unary Neg (NatLit $abs (fst (esNatLit e1) - fst (esNatLit e2))))
                                  | snd (esNatLit e1) && snd (esNatLit e2) = NatLit (fst (esNatLit e1) - fst (esNatLit e2))
                                  | otherwise = Binary Minus e1 e2
-                                where 
+                                where
                                   e1 = exprOpt exp1
                                   e2 = exprOpt exp2
 
@@ -125,22 +125,22 @@ exprOpt (Binary Mult (NatLit 1) ex) = exprOpt ex
 exprOpt (Binary Mult ex (NatLit 1)) = exprOpt ex -- Controlar negativo
 exprOpt (Binary Mult (Unary Neg exp1) (Unary Neg exp2)) | snd (esNatLit e1) && snd (esNatLit e2) = NatLit (fst (esNatLit e1) * fst (esNatLit e2))
                                                         | otherwise = Binary Mult (Unary Neg e1) (Unary Neg e2)
-                                                       where 
+                                                       where
                                                          e1 = exprOpt exp1
                                                          e2 = exprOpt exp2
 exprOpt (Binary Mult (Unary Neg exp1) exp2) | snd (esNatLit e1) && snd (esNatLit e2) = exprOpt (Unary Neg (NatLit (fst (esNatLit e1) * fst (esNatLit e2))))
                                             | otherwise = Binary Mult (Unary Neg e1) e2
-                                           where 
+                                           where
                                              e1 = exprOpt exp1
                                              e2 = exprOpt exp2
 exprOpt (Binary Mult exp1 (Unary Neg exp2)) | snd (esNatLit e1) && snd (esNatLit e2) = exprOpt (Unary Neg (NatLit (fst (esNatLit e1) * fst (esNatLit e2))))
                                             | otherwise = Binary Mult e1 (Unary Neg exp2)
-                                           where 
+                                           where
                                              e1 = exprOpt exp1
                                              e2 = exprOpt exp2
 exprOpt (Binary Mult exp1 exp2) | snd (esNatLit e1) && snd (esNatLit e2) = NatLit (fst (esNatLit e1) * fst (esNatLit e2))
                                 | otherwise = Binary Mult e1 e2
-                               where 
+                               where
                                  e1 = exprOpt exp1
                                  e2 = exprOpt exp2
 
@@ -148,51 +148,51 @@ exprOpt (Binary Div exp (NatLit 1)) = exprOpt exp
 exprOpt (Binary Div (NatLit n1) (NatLit n2)) = NatLit (div n1 n2) -- Controlar negativo igual que Mult, por los signos
 exprOpt (Binary Div (Unary Neg exp1) (Unary Neg exp2)) | snd (esNatLit e1) && snd (esNatLit e2) = NatLit (div (fst (esNatLit e1)) (fst (esNatLit e2)))
                                                        | otherwise = Binary Div (Unary Neg e1) (Unary Neg e2)
-                                                     where 
+                                                     where
                                                        e1 = exprOpt exp1
                                                        e2 = exprOpt exp2
 exprOpt (Binary Div (Unary Neg exp1) exp2) | snd (esNatLit e1) && snd (esNatLit e2) = exprOpt(Unary Neg (NatLit (div (fst (esNatLit e1))  (fst (esNatLit e2)))))
                                            | otherwise = Binary Div (Unary Neg e1) e2
-                                          where 
+                                          where
                                            e1 = exprOpt exp1
                                            e2 = exprOpt exp2
 exprOpt (Binary Div exp1 (Unary Neg exp2)) | snd (esNatLit e1) && snd (esNatLit e2) = exprOpt (Unary Neg (NatLit (div (fst (esNatLit e1))  (fst (esNatLit e2)))))
                                             | otherwise = Binary Div e1 (Unary Neg exp2)
-                                           where 
+                                           where
                                              e1 = exprOpt exp1
                                              e2 = exprOpt exp2
 exprOpt (Binary Div exp1 exp2) | snd (esNatLit e1) && snd (esNatLit e2)  = NatLit (div (fst (esNatLit e1)) (fst (esNatLit e2)))
                                | otherwise = Binary Div e1 e2
-                              where 
+                              where
                                 e1 = exprOpt exp1
                                 e2 = exprOpt exp2
 
 exprOpt (Binary Mod (NatLit n1) (NatLit n2)) = NatLit (mod n1 n2)
 exprOpt (Binary Mod (Unary Neg exp1) (Unary Neg exp2)) | snd (esNatLit e1) && snd (esNatLit e2) = exprOpt (Unary Neg(NatLit (mod (fst (esNatLit e1)) (fst (esNatLit e2)))))-- por si da 0 lo optimizo al Neg
                                                        | otherwise = Binary Mod (Unary Neg e1) (Unary Neg e2)
-                                                      where 
+                                                      where
                                                        e1 = exprOpt exp1
                                                        e2 = exprOpt exp2
 exprOpt (Binary Mod (Unary Neg exp1) exp2) | snd (esNatLit e1) && snd (esNatLit e2) = NatLit (mod (fst (esNatLit e1)) (fst (esNatLit e2)))
                                            | otherwise = Binary Mod (Unary Neg e1) e2
-                                          where 
+                                          where
                                             e1 = exprOpt exp1
                                             e2 = exprOpt exp2
 exprOpt (Binary Mod exp1 (Unary Neg exp2)) | snd (esNatLit e1) && snd (esNatLit e2) = exprOpt (Unary Neg (NatLit (mod (fst (esNatLit e1)) (fst (esNatLit e2)))))
                                             | otherwise = Binary Mod e1 (Unary Neg exp2)
-                                           where 
+                                           where
                                              e1 = exprOpt exp1
                                              e2 = exprOpt exp2
 exprOpt (Binary Mod exp1 exp2) | snd (esNatLit e1) && snd (esNatLit e2) = NatLit (mod (fst (esNatLit e1)) (fst (esNatLit e2)))
                                | otherwise = Binary Mod e1 e2
-                              where 
+                              where
                                 e1 = exprOpt exp1
                                 e2 = exprOpt exp2
 
 exprOpt (Unary Neg (Unary Neg exp)) = exp
 exprOpt (Unary Neg exp) | snd (esNatLit e1) && fst (esNatLit e1) == 0 = NatLit 0
                         | otherwise = Unary Neg e1
-                        where 
+                        where
                          e1 = exprOpt exp
 
 
@@ -223,5 +223,4 @@ stmtOpt (StmtExpr exp) = [StmtExpr (exprOpt exp)]
 stmtOpt (PutChar exp) = [PutChar (exprOpt exp)]
 
 bodyOpt :: Body -> Body
-bodyOpt [] = []
-bodyOpt (x:xs) = stmtOpt x ++ bodyOpt xs
+bodyOpt = concatMap stmtOpt
