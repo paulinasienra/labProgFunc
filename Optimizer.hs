@@ -102,12 +102,12 @@ exprOpt (Binary Minus (Unary Neg exp1) (Unary Neg exp2)) | snd (esNatLit e1) && 
                                                         where 
                                                           e1 = exprOpt exp1
                                                           e2 = exprOpt exp2
-exprOpt (Binary Minus (Unary Neg exp1) exp2) | snd (esNatLit e1) && snd (esNatLit e2) = exprOpt (Unary Neg (NatLit $abs(fst (esNatLit e2) - fst (esNatLit e1))))
+exprOpt (Binary Minus (Unary Neg exp1) exp2) | snd (esNatLit e1) && snd (esNatLit e2) = exprOpt (Unary Neg (NatLit $abs(fst (esNatLit e2) + fst (esNatLit e1))))
                                              | otherwise = Binary Minus (Unary Neg e1) e2
                                             where 
                                               e1 = exprOpt exp1
                                               e2 = exprOpt exp2
-exprOpt (Binary Minus exp1 (Unary Neg exp2)) | snd (esNatLit e1) && snd (esNatLit e2) = exprOpt(Unary Neg (NatLit $abs(fst (esNatLit e1) - fst (esNatLit e2))))
+exprOpt (Binary Minus exp1 (Unary Neg exp2)) | snd (esNatLit e1) && snd (esNatLit e2) = exprOpt(Binary Plus (NatLit (fst (esNatLit e1))) (NatLit (fst (esNatLit e2))))
                                              | otherwise = Binary Minus e1 (Unary Neg exp2)
                                             where 
                                               e1 = exprOpt exp1
