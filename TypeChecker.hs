@@ -95,17 +95,17 @@ obtenerVarTipo (VarDef t n) = (n,t)
 checkBodyTipos :: Body -> Env -> [Error]
 checkBodyTipos [] _ = []
 checkBodyTipos (If e b1 b2:xs) acc | fst tip == TyChar = checkBodyTipos xs acc ++ checkBodyTipos b2 acc ++ 
-                                        checkBodyTipos b1 acc ++ snd tip ++ [Expected TyInt TyChar]
+                                        checkBodyTipos b1 acc ++Expected TyInt TyChar: snd tip 
                                    | otherwise = checkBodyTipos xs acc ++ checkBodyTipos b2 acc ++ checkBodyTipos b1 acc ++ snd tip  
                                  where
                                     tip = checkExprTipos e acc
 --   snd (checkExprTipos e acc) ++ checkBodyTipos b1 acc ++ checkBodyTipos b2 acc ++ checkBodyTipos xs acc
-checkBodyTipos (While e b:xs) acc | fst tip == TyChar = checkBodyTipos xs acc ++ checkBodyTipos b acc ++ snd tip ++ [Expected TyInt TyChar] 
+checkBodyTipos (While e b:xs) acc | fst tip == TyChar = checkBodyTipos xs acc ++ checkBodyTipos b acc ++ Expected TyInt TyChar:snd tip 
                                    | otherwise = checkBodyTipos xs acc ++ checkBodyTipos b acc ++ snd tip
                                  where
                                     tip = checkExprTipos e acc
 checkBodyTipos (StmtExpr e:xs) acc = checkBodyTipos xs acc ++ snd (checkExprTipos e acc) 
-checkBodyTipos (PutChar e:xs) acc | fst tip == TyInt  = checkBodyTipos xs acc ++ reverse (Expected TyChar TyInt:snd tip)
+checkBodyTipos (PutChar e:xs) acc | fst tip == TyInt  = checkBodyTipos xs acc ++ Expected TyChar TyInt:snd tip
                                   | otherwise =  checkBodyTipos xs acc ++ snd tip
                                   where 
                                      tip = checkExprTipos e acc
