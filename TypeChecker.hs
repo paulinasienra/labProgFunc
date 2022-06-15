@@ -117,21 +117,21 @@ checkExprTipos (Var nom) acc = (buscarTipo nom acc,[])
 
 checkExprTipos (NatLit _) acc = (TyInt,[])
 
-checkExprTipos (Binary Equ e1 e2) acc | fst t1 == fst t2 = (TyInt, snd t1 ++ snd t2)
-                                      | otherwise = (TyInt,Expected (fst t1) (fst t2):snd t1 ++ snd t2)
+checkExprTipos (Binary Equ e1 e2) acc | fst t1 == fst t2 = (TyInt, snd t2 ++ snd t1)
+                                      | otherwise = (TyInt,Expected (fst t1) (fst t2):snd t2 ++ snd t1)
                                       where 
                                          t1 = checkExprTipos e1 acc
                                          t2 = checkExprTipos e2 acc
 
-checkExprTipos (Binary Less e1 e2) acc | fst t1 == fst t2 = (fst t1,snd t1 ++ snd t2)
-                                       | otherwise = (fst t1,Expected (fst t1) (fst t2):snd t1 ++ snd t2)
+checkExprTipos (Binary Less e1 e2) acc | fst t1 == fst t2 = (fst t1,snd t2 ++ snd t1)
+                                       | otherwise = (fst t1,Expected (fst t1) (fst t2):snd t2 ++ snd t1)
                                        where
                                           t1 = checkExprTipos e1 acc
                                           t2 = checkExprTipos e2 acc
 
-checkExprTipos (Binary _ e1 e2) acc | (fst t1 == TyInt) && (fst t2 == TyInt) = (TyInt,snd t1 ++ snd t2)
-                                    | (fst t1 == TyChar) && (fst t2 == TyChar) = (TyInt,Expected TyInt TyChar:Expected TyInt TyChar:snd t1 ++ snd t2)
-                                    | otherwise = (TyInt,Expected TyInt TyChar:snd t1 ++ snd t2)
+checkExprTipos (Binary _ e1 e2) acc | (fst t1 == TyInt) && (fst t2 == TyInt) = (TyInt,snd t2 ++ snd t1)
+                                    | (fst t1 == TyChar) && (fst t2 == TyChar) = (TyInt,Expected TyInt TyChar:Expected TyInt TyChar:snd t2 ++ snd t1)
+                                    | otherwise = (TyInt,Expected TyInt TyChar:snd t2 ++ snd t1)
                                     where
                                        t1 = checkExprTipos e1 acc
                                        t2 = checkExprTipos e2 acc
