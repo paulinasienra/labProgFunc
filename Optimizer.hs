@@ -21,6 +21,9 @@ optParser :: Either String Program -> Program
 optParser (Left _) = Program []
 optParser (Right p) = optimize p
 
+parseoCheck :: String -> Program  
+parseoCheck s = optParser $ parser s
+
 
 -- COSAS PARA ARREGLAR
 -- Todos los úlimos casos recursivos quedan en loop si una de las sub-expresiones no se reduce a un NatLit
