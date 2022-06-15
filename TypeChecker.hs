@@ -81,7 +81,7 @@ parseoCheck s = desparseo $ parser s
 checkTipos :: MainBody -> Env -> [Error]
 checkTipos [] acc = []
 checkTipos (Decl vd:xs) acc = checkTipos xs (obtenerVarTipo vd:acc)
-checkTipos (Com stat:xs) acc = checkBodyTipos [stat] acc ++ checkTipos xs acc
+checkTipos (Com stat:xs) acc = checkTipos xs acc ++ checkBodyTipos [stat] acc 
 -- Body = [Stmt]
 -- Env = [(Name,Type)]
 
