@@ -16,8 +16,9 @@ genCodMaq (Decl _:xs) = genCodMaq xs
 genCodMaq (Com stmt:xs) = fst (stmtCodMaq stmt) ++ genCodMaq xs
 
 stmtCodMaq :: Stmt -> (Code, Integer)
+stmtCodMaq (StmtExpr (Assign n e)) = (fst (exprCodMaq e) ++ [STORE n], snd (exprCodMaq e) + 1)
 stmtCodMaq (StmtExpr e) = exprCodMaq e
-stmtCodMaq (PutChar e) = exprCodMaq e -- 
+stmtCodMaq (PutChar e) = (fst (exprCodMaq e) ++ [WRITE], snd (exprCodMaq e) + 1) -- 
 stmtCodMaq (If e b1 b2) = (fst (exprCodMaq e) ++ JMPZ (fromIntegral(snd(bodyCodMaq b1))+ 1): fst(bodyCodMaq b1) ++ JUMP (fromIntegral(snd(bodyCodMaq b2))) : fst(bodyCodMaq b2), snd(bodyCodMaq b1) + snd(bodyCodMaq b2) + 2) -- evaluar expr
 stmtCodMaq (While e b) = (fst (exprCodMaq e) ++ JMPZ (fromIntegral(snd(bodyCodMaq b))+ 1) :fst(bodyCodMaq b) ++ [JUMP (-(fromIntegral(snd(exprCodMaq e)) + fromIntegral(snd(bodyCodMaq b))))], snd(bodyCodMaq b) + snd(exprCodMaq e) + 2) -- lo mismo
 
@@ -31,7 +32,7 @@ exprCodMaq (Var n) = ([LOAD n],1)
 exprCodMaq (CharLit c) = ([PUSH (toInteger$fromEnum c)],1) -- ASCII de c, ponele
 exprCodMaq (NatLit n) = ([PUSH n],1)
 exprCodMaq GetChar = ([READ],1)
-exprCodMaq (Assign n e) = (fst (exprCodMaq e) ++ [STORE n], snd (exprCodMaq e) + 1)
+exprCodMaq (Assign n e) = (fst (exprCodMaq e) ++ [STORE n]++[LOAD n], snd (exprCodMaq e) + 2)
 
 
 -- Aritmetica
@@ -43,11 +44,11 @@ exprCodMaq (Binary Mod e1 e2) = (fst(exprCodMaq e2) ++ fst(exprCodMaq e1) ++ [MO
 exprCodMaq (Unary Neg e) = (fst(exprCodMaq e) ++ [NEG], snd (exprCodMaq e) + 1)
 
 -- Logicos
-exprCodMaq (Binary Less e1 e2) = ( fst (exprCodMaq e2) ++ fst(exprCodMaq e1) ++ CMP: PUSH 1: ADD: JMPZ 3: PUSH 0: JUMP 1: [PUSH 1],snd (exprCodMaq e1) + snd (exprCodMaq e2) + 7)
-exprCodMaq (Binary Equ e1 e2) = ( fst (exprCodMaq e2) ++ fst(exprCodMaq e1) ++ CMP: JMPZ 3: PUSH 0: JUMP 1: [PUSH 1],snd (exprCodMaq e1) + snd (exprCodMaq e2) + 5)
+exprCodMaq (Binary Less e1 e2) = ( fst (exprCodMaq e2) ++ fst(exprCodMaq e1) ++ CMP: PUSH 1: ADD: JMPZ 2: PUSH 0: JUMP 1: [PUSH 1],snd (exprCodMaq e1) + snd (exprCodMaq e2) + 7)
+exprCodMaq (Binary Equ e1 e2) = ( fst (exprCodMaq e2) ++ fst(exprCodMaq e1) ++ CMP: JMPZ 2: PUSH 0: JUMP 1: [PUSH 1],snd (exprCodMaq e1) + snd (exprCodMaq e2) + 5)
 exprCodMaq (Unary Not e) = (fst (exprCodMaq e) ++ JMPZ 3: PUSH 0: JUMP 1: [PUSH 1], snd (exprCodMaq e) + 4)
-exprCodMaq (Binary And e1 e2) = ( fst (exprCodMaq e2) ++ fst(exprCodMaq e1) ++ ADD: PUSH 2: CMP:JMPZ 3:PUSH 0:JUMP 1:[PUSH 1] ,snd (exprCodMaq e1) + snd (exprCodMaq e2) + 7)
-exprCodMaq (Binary Or e1 e2) = ( fst (exprCodMaq e2) ++ fst(exprCodMaq e1) ++ ADD: JMPZ 3: PUSH 1: JUMP 1: [PUSH 0],snd (exprCodMaq e1) + snd (exprCodMaq e2) + 5)
+exprCodMaq (Binary And e1 e2) = ( fst (exprCodMaq e2) ++ fst(exprCodMaq e1) ++ ADD: PUSH 2: CMP:JMPZ 2:PUSH 0:JUMP 1:[PUSH 1] ,snd (exprCodMaq e1) + snd (exprCodMaq e2) + 7)
+exprCodMaq (Binary Or e1 e2) = ( fst (exprCodMaq e2) ++ fst(exprCodMaq e1) ++ ADD: JMPZ 2: PUSH 1: JUMP 1: [PUSH 0],snd (exprCodMaq e1) + snd (exprCodMaq e2) + 5)
 
 
 desparseoGen :: Either String Program -> Code
