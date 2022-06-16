@@ -46,3 +46,15 @@ exprCodMaq (Unary Neg e) = (fst(exprCodMaq e) ++ [NEG], snd (exprCodMaq e) + 1)
 exprCodMaq (Binary Less e1 e2) = ( fst (exprCodMaq e2) ++ fst(exprCodMaq e1) ++ CMP: PUSH 1: ADD: JMPZ 3: PUSH 0: JUMP 1: [PUSH 1],snd (exprCodMaq e1) + snd (exprCodMaq e2) + 7)
 exprCodMaq (Binary Equ e1 e2) = ( fst (exprCodMaq e2) ++ fst(exprCodMaq e1) ++ CMP: JMPZ 3: PUSH 0: JUMP 1: [PUSH 1],snd (exprCodMaq e1) + snd (exprCodMaq e2) + 5)
 exprCodMaq (Unary Not e) = (fst (exprCodMaq e) ++ JMPZ 3: PUSH 0: JUMP 1: [PUSH 1], snd (exprCodMaq e) + 4)
+exprCodMaq (Binary And e1 e2) = ( fst (exprCodMaq e2) ++ fst(exprCodMaq e1) ++ ADD: PUSH 2: CMP:JMPZ 3:PUSH 0:JUMP 1:[PUSH 1] ,snd (exprCodMaq e1) + snd (exprCodMaq e2) + 7)
+exprCodMaq (Binary Or e1 e2) = ( fst (exprCodMaq e2) ++ fst(exprCodMaq e1) ++ ADD: JMPZ 3: PUSH 1: JUMP 1: [PUSH 0],snd (exprCodMaq e1) + snd (exprCodMaq e2) + 5)
+
+
+desparseoGen :: Either String Program -> Code
+desparseoGen (Left _) = []
+desparseoGen (Right p) = generate p
+
+parseoGenerador :: String -> Code
+parseoGenerador s = desparseoGen $ parser s
+
+prueba = "int x; int y; x = 1; x = 1; x = x || 0;"
