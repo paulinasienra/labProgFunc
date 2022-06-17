@@ -65,14 +65,6 @@ checkBody (While e b:xs) acc = checkExprNombres e acc ++ checkBody b acc ++ chec
 checkBody (StmtExpr e:xs) acc = checkExprNombres e acc ++ checkBody xs acc
 checkBody (PutChar e:xs) acc = checkExprNombres e acc ++ checkBody xs acc
 
-desparseo :: Either String Program -> [Error]
-desparseo (Left _) = []
-desparseo (Right p) = checkProgram p
-
-parseoCheck :: String -> [Error]
-parseoCheck s = desparseo $ parser s
-
-
 
 
 
@@ -123,8 +115,8 @@ checkExprTipos (Binary Equ e1 e2) acc | fst t1 == fst t2 = (TyInt, snd t2 ++ snd
                                          t1 = checkExprTipos e1 acc
                                          t2 = checkExprTipos e2 acc
 
-checkExprTipos (Binary Less e1 e2) acc | fst t1 == fst t2 = (fst t1,snd t2 ++ snd t1)
-                                       | otherwise = (fst t1,Expected (fst t1) (fst t2):snd t2 ++ snd t1)
+checkExprTipos (Binary Less e1 e2) acc | fst t1 == fst t2 = (TyInt,snd t2 ++ snd t1)
+                                       | otherwise = (TyInt ,Expected (fst t1) (fst t2):snd t2 ++ snd t1)
                                        where
                                           t1 = checkExprTipos e1 acc
                                           t2 = checkExprTipos e2 acc

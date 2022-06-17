@@ -22,14 +22,14 @@ interp pc (DIV:xs) (n:f:ys,amb) = interp (DIV:pc) xs (div n f:ys,amb)
 interp pc (MOD:xs) (n:f:ys,amb) = interp (MOD:pc) xs (mod n f:ys,amb)
 interp pc (NEG:xs) (n:ys,amb) = interp (NEG:pc) xs (-n:ys,amb)
 interp pc (CMP:xs) (n:f:ys,amb) | n == f = interp (CMP:pc) xs (0:ys,amb)
-                                | n < f = interp (CMP:pc) xs (1:ys,amb)
-                                | otherwise = interp (CMP:pc) xs (-1:ys,amb)
+                                | n < f = interp (CMP:pc) xs (-1:ys,amb)
+                                | otherwise = interp (CMP:pc) xs (1:ys,amb)
 interp pc (PUSH n:xs) (ys,amb) = interp (PUSH n:pc) xs (n:ys,amb)
 interp pc (JMPZ n:xs) (m:ys,amb) | m == 0 && n > 0 = interp (reverse (take n xs) ++ JMPZ n:pc) (drop n xs) (ys,amb)
-                                 | m == 0 = interp (drop n pc) (reverse (take n pc)++ JMPZ n:xs) (ys,amb)
+                                 | m == 0 = interp (drop ((-n)+1) pc) (reverse (take ((-n)+1) pc)++ JMPZ n:xs) (ys,amb)
                                  | otherwise = interp (JMPZ n:pc) xs (ys,amb)
-interp pc (JUMP n:xs) (ys,amb) | n > 0 = interp (reverse (take n xs) ++ JUMP n:pc) (drop n xs) (ys,amb) -- Jump puede ser negativo
-                                | otherwise  = interp (drop n pc) (reverse (take n pc)++ JUMP n:xs) (ys,amb)
+interp pc (JUMP n:xs) (ys,amb)  | n > 0 = interp (reverse (take n xs) ++ JUMP n:pc) (drop n xs) (ys,amb) -- Jump puede ser negativo
+                                | otherwise  = interp (drop ((-n)+1) pc) (reverse (take ((-n)+1) pc)++ JUMP n:xs) (ys,amb)
 interp pc (WRITE: xs) (n:ys,amb) = do putStr [chr (fromIntegral  n)];
                                       interp (WRITE:pc) xs (ys,amb)
 interp pc (READ:xs) (ys,amb) = do line <- getChar;

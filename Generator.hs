@@ -46,7 +46,7 @@ exprCodMaq (Unary Neg e) = (fst(exprCodMaq e) ++ [NEG], snd (exprCodMaq e) + 1)
 -- Logicos
 exprCodMaq (Binary Less e1 e2) = ( fst (exprCodMaq e2) ++ fst(exprCodMaq e1) ++ CMP: PUSH 1: ADD: JMPZ 2: PUSH 0: JUMP 1: [PUSH 1],snd (exprCodMaq e1) + snd (exprCodMaq e2) + 7)
 exprCodMaq (Binary Equ e1 e2) = ( fst (exprCodMaq e2) ++ fst(exprCodMaq e1) ++ CMP: JMPZ 2: PUSH 0: JUMP 1: [PUSH 1],snd (exprCodMaq e1) + snd (exprCodMaq e2) + 5)
-exprCodMaq (Unary Not e) = (fst (exprCodMaq e) ++ JMPZ 3: PUSH 0: JUMP 1: [PUSH 1], snd (exprCodMaq e) + 4)
+exprCodMaq (Unary Not e) = (fst (exprCodMaq e) ++ JMPZ 2: PUSH 0: JUMP 1: [PUSH 1], snd (exprCodMaq e) + 4)
 exprCodMaq (Binary And e1 e2) = ( fst (exprCodMaq e2) ++ fst(exprCodMaq e1) ++ ADD: PUSH 2: CMP:JMPZ 2:PUSH 0:JUMP 1:[PUSH 1] ,snd (exprCodMaq e1) + snd (exprCodMaq e2) + 7)
 exprCodMaq (Binary Or e1 e2) = ( fst (exprCodMaq e2) ++ fst(exprCodMaq e1) ++ ADD: JMPZ 2: PUSH 1: JUMP 1: [PUSH 0],snd (exprCodMaq e1) + snd (exprCodMaq e2) + 5)
 

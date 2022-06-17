@@ -17,24 +17,18 @@ optProg (Decl vd:xs) = Decl vd : optProg xs
 optProg (Com stm:xs) | not$null (stmtOpt stm) = Com (head(stmtOpt stm)) : optProg xs
                      | otherwise = optProg xs
 
-optParser :: Either String Program -> Program
-optParser (Left _) = Program []
-optParser (Right p) = optimize p
-
-parseoCheck :: String -> Program  
-parseoCheck s = optParser $ parser s
-
-
 -- COSAS PARA ARREGLAR
 -- Todos los úlimos casos recursivos quedan en loop si una de las sub-expresiones no se reduce a un NatLit
 -- Logré que funcionara para If y While, hay que adaptarlo al resto
 
--- Neg, Equ, Less creo que estan mal, Equ, Less creo que no se tendrían que optimizar, porque no tienen ni nulo ni neutro
--- en Neg creo que esta mal tener NatLit (-n)
--- Por esto último hay que controlar los resultados negativos
+tieneEfecto :: Expr -> Bool 
+tieneEfecto (Assign _ _) = True
+tieneEfecto GetChar = True
+tieneEfecto (Binary _ e1 e2) = tieneEfecto e1 || tieneEfecto e2
+tieneEfecto (Unary _ e) = tieneEfecto e
+tieneEfecto _ = False
 
---Se supone que primero se optimiza la subexpresión izquierda
---luego la derecha, y después la raíz
+
 exprOpt :: Expr -> Expr
 exprOpt (NatLit i) = NatLit i
 exprOpt (CharLit c)  = CharLit c
@@ -122,8 +116,10 @@ exprOpt (Binary Minus exp1 exp2) | (snd (esNatLit e1) && snd (esNatLit e2)) && f
                                   e1 = exprOpt exp1
                                   e2 = exprOpt exp2
 
-exprOpt (Binary Mult (NatLit 0) ex) = NatLit 0
-exprOpt (Binary Mult ex (NatLit 0)) = NatLit 0
+exprOpt (Binary Mult (NatLit 0) ex) | tieneEfecto ex = Binary Mult (NatLit 0) (exprOpt ex)
+                                    | otherwise = NatLit 0
+exprOpt (Binary Mult ex (NatLit 0)) | tieneEfecto ex = Binary Mult (exprOpt ex) (NatLit 0)
+                                    | otherwise = NatLit 0
 exprOpt (Binary Mult (NatLit 1) ex) = exprOpt ex
 exprOpt (Binary Mult ex (NatLit 1)) = exprOpt ex -- Controlar negativo
 exprOpt (Binary Mult (Unary Neg exp1) (Unary Neg exp2)) | snd (esNatLit e1) && snd (esNatLit e2) = NatLit (fst (esNatLit e1) * fst (esNatLit e2))
