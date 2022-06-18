@@ -87,6 +87,8 @@ exprOpt (Binary Plus exp1 (Unary Neg exp2)) | snd (esNatLit e1) && snd (esNatLit
                                              e1 = exprOpt exp1
                                              e2 = exprOpt exp2
 exprOpt (Binary Plus exp1 exp2) | snd (esNatLit e1) && snd (esNatLit e2) = NatLit $ fst (esNatLit e1) + fst (esNatLit e2)
+                                | snd (esNatLit e1) && fst (esNatLit e1) == 0 = e2
+                                | snd (esNatLit e2) && fst (esNatLit e2) == 0 = e1
                                 | otherwise = Binary Plus e1 e2
                                where
                                  e1 = exprOpt exp1

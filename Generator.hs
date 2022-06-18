@@ -19,7 +19,7 @@ stmtCodMaq :: Stmt -> (Code, Integer)
 stmtCodMaq (StmtExpr (Assign n e)) = (fst (exprCodMaq e) ++ [STORE n], snd (exprCodMaq e) + 1)
 stmtCodMaq (StmtExpr e) = exprCodMaq e
 stmtCodMaq (PutChar e) = (fst (exprCodMaq e) ++ [WRITE], snd (exprCodMaq e) + 1) -- 
-stmtCodMaq (If e b1 b2) = (fst (exprCodMaq e) ++ JMPZ (fromIntegral(snd(bodyCodMaq b1))+ 1): fst(bodyCodMaq b1) ++ JUMP (fromIntegral(snd(bodyCodMaq b2))) : fst(bodyCodMaq b2), snd(bodyCodMaq b1) + snd(bodyCodMaq b2) + 2) -- evaluar expr
+stmtCodMaq (If e b1 b2) = (fst (exprCodMaq e) ++ JMPZ (fromIntegral(snd(bodyCodMaq b1))+ 1): fst(bodyCodMaq b1) ++ JUMP (fromIntegral(snd(bodyCodMaq b2))) : fst(bodyCodMaq b2), snd (exprCodMaq e) + snd(bodyCodMaq b1) + snd(bodyCodMaq b2) + 2) -- evaluar expr
 stmtCodMaq (While e b) = (fst (exprCodMaq e) ++ JMPZ (fromIntegral(snd(bodyCodMaq b))+ 1) :fst(bodyCodMaq b) ++ [JUMP (-(fromIntegral(snd(exprCodMaq e)) + fromIntegral(snd(bodyCodMaq b))))], snd(bodyCodMaq b) + snd(exprCodMaq e) + 2) -- lo mismo
 
 bodyCodMaq :: Body -> (Code, Integer)
@@ -32,7 +32,7 @@ exprCodMaq (Var n) = ([LOAD n],1)
 exprCodMaq (CharLit c) = ([PUSH (toInteger$fromEnum c)],1) -- ASCII de c, ponele
 exprCodMaq (NatLit n) = ([PUSH n],1)
 exprCodMaq GetChar = ([READ],1)
-exprCodMaq (Assign n e) = (fst (exprCodMaq e) ++ [STORE n]++[LOAD n], snd (exprCodMaq e) + 2)
+exprCodMaq (Assign n e) = (fst (exprCodMaq e) ++ STORE n:[LOAD n], snd (exprCodMaq e) + 2)
 
 
 -- Aritmetica
@@ -58,4 +58,4 @@ desparseoGen (Right p) = generate p
 parseoGenerador :: String -> Code
 parseoGenerador s = desparseoGen $ parser s
 
-prueba = "int x; int y; x = 1; x = 1; x = x || 0;"
+prueba = "int total;total = 0;int fin;fin = 0;char in;while (! fin){in = getchar();if(in == '0'){ total = total*10 + 0; }else { if(in == '1'){ total = total*10 + 1; }else { if(in == '2'){ total = total*10 + 2; }else { if(in == '3'){ total = total*10 + 3; }else { if(in == '4'){ total = total*10 + 4; }else { if(in == '5'){ total = total*10 + 5; }else { if(in == '6'){ total = total*10 + 6; }else { if(in == '7'){ total = total*10 + 7; }else { if(in == '8'){ total = total*10 + 8; }else { if(in == '9'){ total = total*10 + 9; }else { fin = 1; }; }; }; }; }; }; }; }; }; };};int digit; digit=2;while (! (total == 0)) {if(digit == 0){ putchar('0'); }else { if(digit == 1){ putchar('1'); }else { if(digit == 2){ putchar('2');}else { if(digit == 3){ putchar('3');}else { if(digit == 4){ putchar('4'); }else { if(digit == 5){ putchar('5'); }else { if(digit == 6){ putchar('6'); }else { if(digit == 7){ putchar('7'); }else { if(digit == 8){ putchar('8'); }else { if(digit == 9){ putchar('9'); }else {  }; }; }; }; }; }; }; }; }; };};"
